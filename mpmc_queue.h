@@ -54,6 +54,23 @@ struct unit_value<16>
 {
     using type = uint128_t;
 };
+template<size_t S>
+struct unit_value_large
+{
+    struct alignas(S) type {
+        uint8_t data[S];
+        constexpr type() : data{} {}
+        constexpr type& operator=(int v) { 
+            for (size_t i = 0; i < S; ++i) data[i] = 0;
+            return *this;
+        }
+    };
+};
+
+template<> struct unit_value<32> : unit_value_large<32> {};
+template<> struct unit_value<64> : unit_value_large<64> {};
+template<> struct unit_value<128> : unit_value_large<128> {};
+template<> struct unit_value<256> : unit_value_large<256> {};
 
 template<typename T, unsigned A>
 class alignas(A) aligned_type : public T
@@ -239,8 +256,9 @@ private:
         }
     };
 
-    static_assert(2 == sizeof(entry) || 4 == sizeof(entry) || 8 == sizeof(entry) || 16 == sizeof(entry),
-                  "entry size not supported");
+    static_assert(2 == sizeof(entry) || 4 == sizeof(entry) || 8 == sizeof(entry) || 16 == sizeof(entry) ||
+                  32 == sizeof(entry) || 64 == sizeof(entry) || 128 == sizeof(entry) || 256 == sizeof(entry),
+                  "entry size not supported - must be 2, 4, 8, 16, 32, 64, 128, or 256 bytes");
     static_assert(sizeof(entry) == sizeof(helper_entry), "entry and helper_entry are not of the same size");
     static_assert(sizeof(entry) == sizeof(entry_as_value), "entry and entry_as_value are not of the same size");
 
